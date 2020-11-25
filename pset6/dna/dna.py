@@ -2,7 +2,6 @@ import sys
 import csv
 
 def main():
-
     ############ Step 1 ############
     #Check for command line arguemtns argv[2]
     if len(sys.argv) != 3:
@@ -66,6 +65,7 @@ def main():
             print (db[i+1][0])
             match = 1
 
+    #If no match
     if (match == 0):
         print("No match")
 
