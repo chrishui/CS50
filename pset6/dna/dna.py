@@ -3,6 +3,7 @@ import csv
 
 def main():
     ############ Step 1 ############
+    
     #Check for command line arguemtns argv[2]
     if len(sys.argv) != 3:
         print("Usage: python dna.py 'database CSV' 'sequences txt'")
