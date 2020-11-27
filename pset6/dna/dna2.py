@@ -56,6 +56,7 @@ def main():
     for x in range(len(db)-1):
         db_int.append([0]*(len(db[0])-1))
 
+    #Define counter for match
     match = 0
     #Compare matches against database
     for i in range(len(db)-1):
