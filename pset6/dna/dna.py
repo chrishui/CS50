@@ -69,7 +69,7 @@ def main():
 
     #If no match
     if (match == 0):
-        print("No match")
+        print("No matchs")
 
 main()
 
