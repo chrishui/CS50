@@ -2,8 +2,8 @@ import sys
 import csv
 
 def main():
+
     ############ Step 1 ############
-    
     #Check for command line arguemtns argv[2]
     if len(sys.argv) != 3:
         print("Usage: python dna.py 'database CSV' 'sequences txt'")
@@ -49,14 +49,13 @@ def main():
     for i in range(len(STR_match_count)):
         STR_match_count[i]=max(STR_match_list[i])
 
-    print(STR_match_count)
+    #print(STR_match_count)
 
     #Array for database in int
     db_int = []
     for x in range(len(db)-1):
         db_int.append([0]*(len(db[0])-1))
 
-    #Define counter for match
     match = 0
     #Compare matches against database
     for i in range(len(db)-1):
@@ -67,9 +66,8 @@ def main():
             print (db[i+1][0])
             match = 1
 
-    #If no match
     if (match == 0):
-        print("No matchs")
+        print("No match")
 
 main()
 
