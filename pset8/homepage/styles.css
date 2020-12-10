@@ -1,0 +1,30 @@
+/* Req 1: 5 different CSS selectors */
+
+/* Class */
+.image_section
+{
+    background-color:#DAF7A6;
+}
+
+.header_section
+{
+    height: 100px;
+}
+
+
+h1
+{
+    font: italic 3.5em "Fira Sans", serif;
+    text-align: center;
+}
+
+.blue
+{
+    color: blue;
+}
+
+/* ID */
+#user_input_section
+{
+    height: 150px;
+}

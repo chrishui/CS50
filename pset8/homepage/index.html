@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<!-- Req 1: four different .html pages -->
+<!-- Req 2: 10 distinct HTML tags -->
+
+<html lang="en">
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="styles.css" rel="stylesheet">
+        <title>My Webpage</title>
+        <link rel="stylesheet" href="styles.css"
+    </head>
+
+    <body>
+        <!-- Header section -->
+        <div class="container-fluid header_section">
+            <h1 class="blue">CS50 web dev page</h1>
+        </div>
+
+        <!-- Media section -->
+        <div class="media image_section">
+          <img class="mr-3" src="https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/SpongeBob_SquarePants_character.svg/1024px-SpongeBob_SquarePants_character.svg.png" alt="Avatar" width="64" height="64">
+          <div class="media-body">
+            <h5 class="mt-0 blue">This is spongebob</h5>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. In sollicitudin orci quis dolor mollis suscipit. Integer eleifend pretium urna, non hendrerit felis cursus in. Aliquam id eros at enim rhoncus molestie. Nullam auctor venenatis lorem sit amet aliquam. Sed imperdiet erat vitae dolor vestibulum scelerisque. Nulla facilisi. Fusce at rhoncus quam. Ut id dolor non sapien cursus lobortis. Nulla odio nunc, lobortis id accumsan eget, posuere at ligula.
+          </div>
+        </div>
+
+        <!-- test -->
+        <form onsubmit="greet(); return false;">
+            <input type="text" id="name">
+            <input type = "submit">
+        </form>
+        <div id = "resulta">
+            Hello
+        </div>
+
+        <script>
+            function greet()
+            {
+                let name2 = document.querySelector('#name').value;
+                document.querySelector('#resulta').innerHTML = ('Hello ' + name2);
+            }
+        </script>
+
+        <!-- Navigation section -->
+        <form onsubmit="cars(); return false;">
+            <label for="cars">Choose a car:</label>
+            <!-- select creates a drop down menu with 4 options -->
+            <select name='cars' id='cars'>
+                <option value="volvo">Volvo</option>
+                <option value="saab">Saab</option>
+                <option value="opel">Opel</option>
+                <option value="audi">Audi</option>
+            </select>
+            <input type="submit" value='Generate the phrase below'>
+        </form>
+
+        <!-- JavaScript to change according to user drop-down menu chosen item -->
+        <div id="car_result">
+            Car chosen:
+        </div>
+
+        <!-- JavaScript for cars -->
+        <script>
+            function cars()
+            {
+                let name = document.querySelector('option').value;
+                document.querySelector('#car_result').innerHTML = 'b';
+            }
+        </script>
+
+
+        asds
+
+
+
+    </body>
+</html>
