@@ -1,6 +1,6 @@
 /* SQL query to list the names of all people who starred in a movie in which Kevin Bacon also starred */
 /* Kevin Bacon born in 1958 */
-/* Kevin Bacon not included in resulting list */
+/* Kevin Bacon not included in resulting list. */
 
 SELECT people.name FROM people WHERE people.id IN(
 
