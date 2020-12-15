@@ -108,14 +108,46 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
+# ==========================================================================
+# 2: Quote
+# ==========================================================================
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
 def quote():
     """Get stock quote."""
-    return apology("TODO")
 
-# Step 1
+    # User reached route via GET
+    if request.method == "GET":
+        return render_template("quote.html")
+
+    # User reached route via POST (submitted a form via POST)
+    if request.method == "POST":
+
+        # Obtain user's symbol input
+        symbol = request.form.get("symbol")
+
+        # If no symbol entered
+        if not symbol:
+            return apology("Please input symbol",403)
+
+        # Obtain symbol data via lookup helper function
+        data = lookup(symbol)
+
+        name = data["name"]
+        price = data["price"]
+        symbol = data["symbol"]
+
+        # if no data returned
+        if not data:
+            return apology("Symbol doesn't exist",403)
+
+        # Otherwise, link name, symbol, and price to quoted.html
+        else:
+            return render_template("quoted.html", name=name, price=price, symbol=symbol)
+
+# ==========================================================================
+# 1: Register
+# ==========================================================================
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
@@ -131,7 +163,7 @@ def register():
         username = request.form.get("username")
 
         # If no username is provided
-        if not name:
+        if not username:
             return apology("Please input username",403)
 
         # Check if username already exists
@@ -148,20 +180,24 @@ def register():
         # Obtain user's password confirmation
         confirmation = request.form.get("confirmation")
 
-        ### If either input is blank (Is this correct???????????)
-        if not password or confirmation:
+        # If either input is blank
+        if not password:
             return apology("Please input password",403)
+        if not confirmation:
+            return apology("Please input password confirmation",403)
 
         # If password doesn't match
         if password != confirmation:
             return apology("passwords do not match",403)
 
+        # Hash password
+        hash = generate_password_hash(password,method='pbkdf2:sha256',salt_length=8)
+
         # Insert new user into users (in finance.db)
-        
+        db.execute("INSERT INTO users (username, hash) VALUES (:username, :hash)", username=username, hash=hash)
 
-
-
-
+        # Return to login form
+        return redirect("/")
 
 @app.route("/sell", methods=["GET", "POST"])
 @login_required
