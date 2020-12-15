@@ -1,3 +1,7 @@
+#==========================================================================
+# Rev0.1 - 15/12/2020 - Chris Hui
+#==========================================================================
+
 import os
 
 from cs50 import SQL
@@ -46,7 +50,9 @@ def index():
     """Show portfolio of stocks"""
     return apology("TODO")
 
-
+#==========================================================================
+# 3: Buy
+#==========================================================================
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
@@ -108,9 +114,9 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-# ==========================================================================
+#==========================================================================
 # 2: Quote
-# ==========================================================================
+#==========================================================================
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
 def quote():
@@ -133,21 +139,23 @@ def quote():
         # Obtain symbol data via lookup helper function
         data = lookup(symbol)
 
-        name = data["name"]
-        price = data["price"]
-        symbol = data["symbol"]
-
         # if no data returned
         if not data:
             return apology("Symbol doesn't exist",403)
 
-        # Otherwise, link name, symbol, and price to quoted.html
+        # If data is returned
         else:
-            return render_template("quoted.html", name=name, price=price, symbol=symbol)
+            # Assigning lookup dict into the name/price/symbol
+            name = data["name"]
+            price = data["price"]
+            symbol = data["symbol"]
 
-# ==========================================================================
+            # Otherwise, link name, symbol, and price to quoted.html
+            return render_template("quoted.html", name=name, price=price, symbol=symbol, data=data)
+
+#==========================================================================
 # 1: Register
-# ==========================================================================
+#==========================================================================
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
