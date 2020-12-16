@@ -149,9 +149,13 @@ def quote():
             name = data["name"]
             price = data["price"]
             symbol = data["symbol"]
+            #sector = data["sector"]
+            #industry = data["industry"]
+            #website = data["website"]
+            #description = data["description"]
 
             # Otherwise, link name, symbol, and price to quoted.html
-            return render_template("quoted.html", name=name, price=price, symbol=symbol, data=data)
+            return render_template("quoted.html", name=name, price=price, symbol=symbol)
 
 #==========================================================================
 # 1: Register
