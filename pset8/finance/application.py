@@ -12,6 +12,8 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, lookup, usd
+#import datetime
+from datetime import datetime
 
 # Configure application
 app = Flask(__name__)
@@ -57,8 +59,68 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
 
+    # User reach route via GET
+    if request.method == "GET":
+        return render_template("buy.html")
+
+    # User reach route via POST (as by submitting a fortm via POST)
+    if request.method == "POST":
+
+        # Obtain user's symbol input
+        symbol = request.form.get("symbol")
+
+        # if no input
+        if not symbol:
+            return apology("Please input symbol", 403)
+
+        # Obtain instrument from user's input
+        instrument = lookup(symbol)
+
+        # If instrument does not exist
+        if not instrument:
+            return apology("Instrument doesn't exist",403)
+
+        # If instrument exists, check share price
+        else:
+            # Assign lookup dict for instrument price
+            price = instrument["price"]
+
+        # Obtain user's no. of shares input
+        shares = int(request.form.get("shares"))
+
+        # if no. of shares is not positive integer
+        if shares < 0:
+            return apology("No. of shares must be positive",403)
+
+        # Total cost of user's shares purchase
+        cost = price * shares
+
+        # Obtain logged in user's user_id (??????) -------------------------------- is user_id correct?
+        user_id = session.get("user_id")
+
+        # Check user's remaining cash (??????) -------------------------------- as above
+        cash = (db.execute("SELECT cash FROM users WHERE id = :user_id", user_id=user_id))[0]["cash"]
+
+        # Log current time
+        date = datetime.now().date()
+        time = datetime.now().time()
+
+        # Check if sufficient funds to complete purchase
+        if cost > cash:
+            return apology("Insufficient funds",403)
+
+        # Insert data into table
+        else:
+            db.execute("INSERT INTO buy (id, direction, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :quantity, :price, :total_amount, :trading_day, :trading_time)",
+            id=user_id, direction="BUY", quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
+
+        # To update cash -------------------------------------- TBC
+        cash_remain = cash - cost
+        db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
+
+        # Redirect user to buy page -------------------------------------- TBC
+        return redirect("/buy")
 
 @app.route("/history")
 @login_required
@@ -137,22 +199,22 @@ def quote():
             return apology("Please input symbol",403)
 
         # Obtain symbol data via lookup helper function
-        data = lookup(symbol)
+        instrument = lookup(symbol)
 
         # if no data returned
-        if not data:
+        if not instrument:
             return apology("Symbol doesn't exist",403)
 
         # If data is returned
         else:
             # Assigning lookup dict into the name/price/symbol
-            name = data["name"]
-            price = data["price"]
-            symbol = data["symbol"]
-            #sector = data["sector"]
-            #industry = data["industry"]
-            #website = data["website"]
-            #description = data["description"]
+            name = instrument["name"]
+            price = instrument["price"]
+            symbol = instrument["symbol"]
+            #sector = instrument["sector"]
+            #industry = instrument["industry"]
+            #website = instrument["website"]
+            #description = instrument["description"]
 
             # Otherwise, link name, symbol, and price to quoted.html
             return render_template("quoted.html", name=name, price=price, symbol=symbol)
@@ -180,7 +242,7 @@ def register():
 
         # Check if username already exists
         # Query database for username
-        query = db.execute("SELECT username FROM users WHERE username = :username", username = request.form.get("username"))
+        query = db.execute("SELECT username FROM users WHERE username = :username", username = username)
 
         # If query returns a username, that username has been taken
         if len(query) != 0:
