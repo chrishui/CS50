@@ -53,18 +53,21 @@ if not os.environ.get("API_KEY"):
 def index():
     """Show portfolio of stocks"""
 
-    # Obtain logged in user's user_id (??????) -------------------------------- is user_id correct?
+    # Obtain logged in user's user_id
     user_id = session.get("user_id")
 
     # pull symbols, quantities and average prices from finance.db
-    rows = db.execute("SELECT symbol, quantity, AVG(price) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+    rows = db.execute("SELECT symbol, SUM(quantity), AVG(price) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
 
     # To obtain current share prices
-    # Obtain symbols stored in finance.db
+    # Obtain symbols stored in finance.db --------------------------------To be updated to 'current porfolio' table?
     symbol_db = db.execute("SELECT symbol FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
 
     # No. of different shares bought by user
     num = len(symbol_db)
+
+    # stocks total value
+    tot_stocks = 0
 
     # Iterate over each stock
     for i in range(num):
@@ -78,25 +81,30 @@ def index():
         rows[i]['currentprice'] = c_price
 
         # total purchase price
-        tot_p = (rows[i]["AVG(price)"])*(rows[i]["quantity"])
+        tot_p = (rows[i]["AVG(price)"])*(rows[i]["SUM(quantity)"])
         # Add total purchase price, as dict, to rows
         rows[i]['totalpurchaseprice'] = tot_p
 
         # total current value
-        tot_v = c_price*(rows[i]["quantity"])
+        tot_v = c_price*(rows[i]["SUM(quantity)"])
         # Add total current value, as dict, to rows
         rows[i]['totalcurrentprice'] = tot_v
 
+        # Add total value to stocks total value
+        tot_stocks += tot_v
 
+    # User remaining cash balance
+    cash = (db.execute("SELECT cash FROM users WHERE id=:id", id=user_id))[0]["cash"]
 
+    # Grand total (stocks' total current value plus cash)
+    gtot = cash + tot_stocks
 
+    #User reach route via GET
+    if request.method == "GET":
+        return render_template("index.html", rows=rows, cash=cash, gtot=gtot)
 
-
-
-
-
-    return render_template("index.html", rows=rows)
-    #return apology("TODO")
+    else:
+        return apology("Error",403)
 
 #==========================================================================
 # 3: Buy
@@ -156,7 +164,7 @@ def buy():
         if cost > cash:
             return apology("Insufficient funds",403)
 
-        # Insert data into table
+        # Insert data into table ------------------------------------- This table should be 'history' table?
         else:
             db.execute("INSERT INTO buy (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
             id=user_id, direction="BUY", symbol=symbol, quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
@@ -172,7 +180,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    return apology("error",403)
 
 #==========================================================================
 # Preloaded: login
@@ -323,11 +331,92 @@ def register():
         # Return to login form
         return redirect("/")
 
+#==========================================================================
+# 5: Sell
+#==========================================================================
 @app.route("/sell", methods=["GET", "POST"])
 @login_required
 def sell():
     """Sell shares of stock"""
-    return apology("TODO")
+
+     # User reach route via GET
+    if request.method == "GET":
+
+        # Obtain logged in user's user_id
+        user_id = session.get("user_id")
+
+        # Obtain symbols stored in finance.db (user purchased)
+        symbol_db = db.execute("SELECT symbol FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+
+        # link symbol_db to GET
+        return render_template("sell.html", symbol_db = symbol_db)
+
+    # User reach route via POST (as by submitting a fortm via POST)
+    if request.method == "POST":
+
+        # Obtain logged in user's user_id
+        user_id = session.get("user_id")
+
+        # Obtain user's chosen symbol
+        symbol = request.form.get("tosell")
+
+        # If no symbol chosen
+        if not symbol:
+            return apology("No symbol selected",403)
+
+        # Obtain symbols stored in finance.db (user purchased) -------------------- Alter this to obtain data from updated ' buy' table?
+        symbol_db = db.execute("SELECT symbol, SUM(quantity) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+
+        num = len(symbol_db)
+
+        # Obtain user's chosen no. of shares to sell
+        shares = int(request.form.get("shares"))
+
+        # Check if user owns chosen stock, and if no. of shares to sell exceeds shares owned
+        symbol_check = 0
+        for i in range(num):
+            if symbol in symbol_db[i]['symbol']:
+                # Symbol found
+                symbol_check = 1
+                # No. of shares check
+                if shares > int(symbol_db[i]['SUM(quantity)']):
+                    return apology ("Invalid shares input",403)
+                break
+        if symbol_check != 1:
+            return apology("Stock not owned",403)
+
+        # Obtain instrument from user's input using lookup()
+        instrument = lookup(symbol)
+
+        # Get current share price
+        price = instrument["price"]
+
+        # Sell (USD$)
+        sale = price * shares
+
+        # Log current time
+        date = datetime.now().date()
+        time = datetime.now().time()
+
+        # Check user's remaining cash
+        cash = (db.execute("SELECT cash FROM users WHERE id = :user_id", user_id=user_id))[0]["cash"]
+
+        # To update cash -------------------------------------- TBC
+        cash_remain = cash + sale
+        db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
+
+        # Insert data into table ------------------------------------- This table should be 'history' table?
+        db.execute("INSERT INTO buy (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
+        id=user_id, direction="SELL", symbol=symbol, quantity=shares, price=price, total_amount=sale, trading_day=date, trading_time=time)
+
+        return redirect("/")
+
+
+
+
+
+
+        #return apology("TODO")
 
 
 def errorhandler(e):
