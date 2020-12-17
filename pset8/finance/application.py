@@ -45,12 +45,58 @@ db = SQL("sqlite:///finance.db")
 if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
 
-
+#==========================================================================
+# 4: Index
+#==========================================================================
 @app.route("/")
 @login_required
 def index():
     """Show portfolio of stocks"""
-    return apology("TODO")
+
+    # Obtain logged in user's user_id (??????) -------------------------------- is user_id correct?
+    user_id = session.get("user_id")
+
+    # pull symbols, quantities and average prices from finance.db
+    rows = db.execute("SELECT symbol, quantity, AVG(price) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+
+    # To obtain current share prices
+    # Obtain symbols stored in finance.db
+    symbol_db = db.execute("SELECT symbol FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+
+    # No. of different shares bought by user
+    num = len(symbol_db)
+
+    # Iterate over each stock
+    for i in range(num):
+        # select symbol
+        sbl = symbol_db[i]['symbol']
+        # Lookup data using lookup()
+        current = lookup(sbl)
+        # Obtain current price
+        c_price = current["price"]
+        # Add current price, as dict, to rows
+        rows[i]['currentprice'] = c_price
+
+        # total purchase price
+        tot_p = (rows[i]["AVG(price)"])*(rows[i]["quantity"])
+        # Add total purchase price, as dict, to rows
+        rows[i]['totalpurchaseprice'] = tot_p
+
+        # total current value
+        tot_v = c_price*(rows[i]["quantity"])
+        # Add total current value, as dict, to rows
+        rows[i]['totalcurrentprice'] = tot_v
+
+
+
+
+
+
+
+
+
+    return render_template("index.html", rows=rows)
+    #return apology("TODO")
 
 #==========================================================================
 # 3: Buy
@@ -112,15 +158,15 @@ def buy():
 
         # Insert data into table
         else:
-            db.execute("INSERT INTO buy (id, direction, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :quantity, :price, :total_amount, :trading_day, :trading_time)",
-            id=user_id, direction="BUY", quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
+            db.execute("INSERT INTO buy (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
+            id=user_id, direction="BUY", symbol=symbol, quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
 
         # To update cash -------------------------------------- TBC
         cash_remain = cash - cost
         db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
 
-        # Redirect user to buy page -------------------------------------- TBC
-        return redirect("/buy")
+        # Redirect user to index page -------------------------------------- TBC
+        return redirect("/")
 
 @app.route("/history")
 @login_required
@@ -128,7 +174,9 @@ def history():
     """Show history of transactions"""
     return apology("TODO")
 
-
+#==========================================================================
+# Preloaded: login
+#==========================================================================
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -165,7 +213,9 @@ def login():
     else:
         return render_template("login.html")
 
-
+#==========================================================================
+# Preloaded: logout
+#==========================================================================
 @app.route("/logout")
 def logout():
     """Log user out"""
