@@ -56,23 +56,22 @@ def index():
     # Obtain logged in user's user_id
     user_id = session.get("user_id")
 
-    # pull symbols, quantities and average prices from finance.db --------------------------------To be updated to 'current porfolio' table?
-    rows = db.execute("SELECT symbol, SUM(quantity), AVG(price) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
+    # pull symbols, quantities and average prices from finance.db > portfolio
+    rows = db.execute("SELECT symbol, quantity, price, total_amount FROM portfolio WHERE id=:id", id=user_id)
 
-    # To obtain current share prices
-    # Obtain symbols stored in finance.db --------------------------------To be updated to 'current porfolio' table?
-    symbol_db = db.execute("SELECT symbol FROM history WHERE id=:id GROUP BY symbol", id=user_id)
+    # To obtain average purchase prices, from history table
+    avg_pur_price = db.execute("SELECT symbol, AVG(price) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
 
     # No. of different shares bought by user
-    num = len(symbol_db)
+    num = len(rows)
 
-    # stocks total value
+    # stocks total value current
     tot_stocks = 0
 
     # Iterate over each stock
     for i in range(num):
         # select symbol
-        sbl = symbol_db[i]['symbol']
+        sbl = rows[i]['symbol']
         # Lookup data using lookup()
         current = lookup(sbl)
         # Obtain current price
@@ -80,18 +79,21 @@ def index():
         # Add current price, as dict, to rows
         rows[i]['currentprice'] = c_price
 
-        # total purchase price
-        tot_p = (rows[i]["AVG(price)"])*(rows[i]["SUM(quantity)"])
-        # Add total purchase price, as dict, to rows
-        rows[i]['totalpurchaseprice'] = tot_p
-
         # total current value
-        tot_v = c_price*(rows[i]["SUM(quantity)"])
+        tot_v = c_price*(rows[i]["quantity"])
         # Add total current value, as dict, to rows
         rows[i]['totalcurrentprice'] = tot_v
 
-        # Add total value to stocks total value
+        # Add total value to stocks total value current
         tot_stocks += tot_v
+
+        #18/12/20
+        #Check average purchase price
+        for j in range(len(avg_pur_price)):
+            if avg_pur_price[j]['symbol'] == sbl:
+                avg_pprice = avg_pur_price[j]['AVG(price)']
+                rows[i]['averagepurchaseprice'] = avg_pprice
+                break
 
     # User remaining cash balance
     cash = (db.execute("SELECT cash FROM users WHERE id=:id", id=user_id))[0]["cash"]
@@ -172,7 +174,7 @@ def buy():
             id=user_id, direction="BUY", symbol=symbol, quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
 
             ### 18/12/20 ###
-            # Live table
+            # Live (portfolio) table
             live = db.execute("SELECT id, symbol, quantity, price, total_amount FROM portfolio WHERE id=:user_id AND symbol=:symbol", user_id=user_id, symbol=symbol)
 
             # If user have not purchased this stock before
@@ -197,11 +199,11 @@ def buy():
 
                 ### 18/12/20 ###
 
-        # To update cash -------------------------------------- TBC
+        # To update cash
         cash_remain = cash - cost
         db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
 
-        # Redirect user to index page -------------------------------------- TBC
+        # Redirect user to index page
         return redirect("/")
 
 @app.route("/history")
@@ -374,7 +376,7 @@ def sell():
         user_id = session.get("user_id")
 
         # Obtain symbols stored in finance.db (user purchased)
-        symbol_db = db.execute("SELECT symbol FROM history WHERE id=:id GROUP BY symbol", id=user_id)
+        symbol_db = db.execute("SELECT symbol FROM portfolio WHERE id=:id", id=user_id)
 
         # link symbol_db to GET
         return render_template("sell.html", symbol_db = symbol_db)
@@ -392,10 +394,10 @@ def sell():
         if not symbol:
             return apology("No symbol selected",403)
 
-        # Obtain symbols stored in finance.db (user purchased) -------------------- Alter this to obtain data to live table?
-        symbol_db = db.execute("SELECT symbol, SUM(quantity) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
+        # Obtain symbols stored portfolio table, finance.db
+        live = db.execute("SELECT symbol, quantity FROM portfolio WHERE id=:id", id=user_id)
 
-        num = len(symbol_db)
+        num = len(live)
 
         # Obtain user's chosen no. of shares to sell
         shares = int(request.form.get("shares"))
@@ -403,11 +405,11 @@ def sell():
         # Check if user owns chosen stock, and if no. of shares to sell exceeds shares owned
         symbol_check = 0
         for i in range(num):
-            if symbol in symbol_db[i]['symbol']:
+            if symbol in live[i]['symbol']:
                 # Symbol found
                 symbol_check = 1
                 # No. of shares check
-                if shares > int(symbol_db[i]['SUM(quantity)']):
+                if shares > int(live[i]['quantity']):
                     return apology ("Invalid shares input",403)
                 break
         if symbol_check != 1:
@@ -429,23 +431,39 @@ def sell():
         # Check user's remaining cash
         cash = (db.execute("SELECT cash FROM users WHERE id = :user_id", user_id=user_id))[0]["cash"]
 
-        # To update cash -------------------------------------- TBC
+        # To update cash
         cash_remain = cash + sale
         db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
 
-        # Insert data into table ------------------------------------- This table should be 'history' table?
+        # Insert data into history table
         db.execute("INSERT INTO history (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
         id=user_id, direction="SELL", symbol=symbol, quantity=shares, price=price, total_amount=sale, trading_day=date, trading_time=time)
 
+        ### 18/12/2020 ###
+        # Adjust portfolio table
+        # Obtain portfolio data
+        livedb = db.execute("SELECT quantity, price, total_amount FROM portfolio WHERE id=:id AND symbol=:symbol", id=user_id, symbol=symbol)
+
+        # Obtain previous amounts
+        quantity_old = int(livedb[0]['quantity'])
+        totalamount_old = int(livedb[0]['total_amount'])
+        avgpprice = int(livedb[0]['price'])
+
+        # Adjust with new sold amounts
+        quantity_new = quantity_old - shares
+        totalamount_new = totalamount_old - (shares * avgpprice)
+
+        # Delete row from table if all shares of a company is sold
+        if quantity_new == 0:
+            db.execute("DELETE FROM portfolio WHERE symbol=:symbol, id=:id", symbol=symbol, id=user_id)
+
+        # Else update live table
+        else:
+            db.execute("UPDATE portfolio SET quantity=:quantity, total_amount=:total_amount WHERE symbol=:symbol AND id=:id",
+            quantity=quantity_new, total_amount=totalamount_new, symbol=symbol, id=user_id)
+        ### 18/12/2020 ###
+
         return redirect("/")
-
-
-
-
-
-
-        #return apology("TODO")
-
 
 def errorhandler(e):
     """Handle error"""
