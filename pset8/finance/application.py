@@ -206,11 +206,22 @@ def buy():
         # Redirect user to index page
         return redirect("/")
 
+#==========================================================================
+# 6: history
+#==========================================================================
 @app.route("/history")
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("error",403)
+
+    # Obtain logged in user's user_id
+    user_id = session.get("user_id")
+
+    # Obtain history table for user
+    rows = db.execute("SELECT direction, symbol, quantity, price, total_amount, trading_day, trading_time FROM history WHERE id=:id", id=user_id)
+
+    # Render history page
+    return render_template("history.html", rows=rows)
 
 #==========================================================================
 # Preloaded: login
@@ -455,7 +466,7 @@ def sell():
 
         # Delete row from table if all shares of a company is sold
         if quantity_new == 0:
-            db.execute("DELETE FROM portfolio WHERE symbol=:symbol, id=:id", symbol=symbol, id=user_id)
+            db.execute("DELETE FROM portfolio WHERE symbol=:symbol AND id=:id", symbol=symbol, id=user_id)
 
         # Else update live table
         else:
