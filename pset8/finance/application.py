@@ -56,12 +56,12 @@ def index():
     # Obtain logged in user's user_id
     user_id = session.get("user_id")
 
-    # pull symbols, quantities and average prices from finance.db
-    rows = db.execute("SELECT symbol, SUM(quantity), AVG(price) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+    # pull symbols, quantities and average prices from finance.db --------------------------------To be updated to 'current porfolio' table?
+    rows = db.execute("SELECT symbol, SUM(quantity), AVG(price) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
 
     # To obtain current share prices
     # Obtain symbols stored in finance.db --------------------------------To be updated to 'current porfolio' table?
-    symbol_db = db.execute("SELECT symbol FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+    symbol_db = db.execute("SELECT symbol FROM history WHERE id=:id GROUP BY symbol", id=user_id)
 
     # No. of different shares bought by user
     num = len(symbol_db)
@@ -150,7 +150,7 @@ def buy():
         # Total cost of user's shares purchase
         cost = price * shares
 
-        # Obtain logged in user's user_id (??????) -------------------------------- is user_id correct?
+        # Obtain logged in user's user_id
         user_id = session.get("user_id")
 
         # Check user's remaining cash (??????) -------------------------------- as above
@@ -164,10 +164,38 @@ def buy():
         if cost > cash:
             return apology("Insufficient funds",403)
 
-        # Insert data into table ------------------------------------- This table should be 'history' table?
+        # Insert data into history table
+        # Insert data into live portfolio table
         else:
-            db.execute("INSERT INTO buy (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
+            # History table
+            db.execute("INSERT INTO history (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
             id=user_id, direction="BUY", symbol=symbol, quantity=shares, price=price, total_amount=cost, trading_day=date, trading_time=time)
+
+            ### 18/12/20 ###
+            # Live table
+            live = db.execute("SELECT id, symbol, quantity, price, total_amount FROM portfolio WHERE id=:user_id AND symbol=:symbol", user_id=user_id, symbol=symbol)
+
+            # If user have not purchased this stock before
+            if not live:
+                db.execute("INSERT INTO portfolio (id, symbol, quantity, price, total_amount) VALUES (:id, :symbol, :quantity, :price, :total_amount)",
+                id=user_id, symbol=symbol, quantity=shares, price=price, total_amount=cost)
+
+            # Else, obtain previous purchased amounts
+            else:
+                quantity_old = int(live[0]['quantity'])
+                avgprice_old = int(live[0]['price'])
+                totalamount_old = int(live[0]['total_amount'])
+
+                # Adjust with newly purchased amounts
+                quantity_new = quantity_old + shares
+                avgprice_new = (avgprice_old + price)/2
+                totalamount_new = totalamount_old + cost
+
+                # To update live table
+                db.execute("UPDATE portfolio SET quantity=:quantity, price=:price, total_amount=:total_amount WHERE id=:id AND symbol=:symbol",
+                quantity=quantity_new, price=avgprice_new, total_amount=totalamount_new, id=user_id, symbol=symbol)
+
+                ### 18/12/20 ###
 
         # To update cash -------------------------------------- TBC
         cash_remain = cash - cost
@@ -346,7 +374,7 @@ def sell():
         user_id = session.get("user_id")
 
         # Obtain symbols stored in finance.db (user purchased)
-        symbol_db = db.execute("SELECT symbol FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+        symbol_db = db.execute("SELECT symbol FROM history WHERE id=:id GROUP BY symbol", id=user_id)
 
         # link symbol_db to GET
         return render_template("sell.html", symbol_db = symbol_db)
@@ -364,8 +392,8 @@ def sell():
         if not symbol:
             return apology("No symbol selected",403)
 
-        # Obtain symbols stored in finance.db (user purchased) -------------------- Alter this to obtain data from updated ' buy' table?
-        symbol_db = db.execute("SELECT symbol, SUM(quantity) FROM buy WHERE id=:id GROUP BY symbol", id=user_id)
+        # Obtain symbols stored in finance.db (user purchased) -------------------- Alter this to obtain data to live table?
+        symbol_db = db.execute("SELECT symbol, SUM(quantity) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
 
         num = len(symbol_db)
 
@@ -406,7 +434,7 @@ def sell():
         db.execute("UPDATE users SET cash = :cash WHERE id = :id", cash=cash_remain, id=user_id)
 
         # Insert data into table ------------------------------------- This table should be 'history' table?
-        db.execute("INSERT INTO buy (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
+        db.execute("INSERT INTO history (id, direction, symbol, quantity, price, total_amount, trading_day, trading_time) VALUES (:id, :direction, :symbol, :quantity, :price, :total_amount, :trading_day, :trading_time)",
         id=user_id, direction="SELL", symbol=symbol, quantity=shares, price=price, total_amount=sale, trading_day=date, trading_time=time)
 
         return redirect("/")
