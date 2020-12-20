@@ -319,7 +319,7 @@ def quote():
             tags = data["tags"]
 
             # Otherwise, link name, symbol, and price to quoted.html
-            return render_template("quoted.html", name=name, price=price, symbol=symbol, tags=tags)
+            return render_template("quote.html", name=name, price=price, symbol=symbol, tags=tags)
 
 #==========================================================================
 # 1: Register
