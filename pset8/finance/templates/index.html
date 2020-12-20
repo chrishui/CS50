@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <h1>Portfolio</h1>
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th> Symbol </th>
+                <th> No. of shares </th>
+                <th> Avg. purchase price </th>
+                <th> Total purchase price </th>
+                <th> Current price </th>
+                <th> Total current price </th>
+            </tr>
+        </thead>
+        {% for row in rows %}
+            <tr>
+                <td> {{ row['symbol'] }} </td>
+                <td> {{ row['quantity'] }} </td>
+                <td> {{ row['averagepurchaseprice'] }} </td>
+                <td> {{ row['total_amount'] }} </td>
+                <td> {{ row['currentprice'] }} </td>
+                <td> {{ row['totalcurrentprice'] }} </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <br><br>
+
+    <p> Available cash (USD$): {{ cash }} </p>
+
+    <p> Grand total (cash + current stocks' value) (USD$): {{ gtot }} </p>
+
+{% endblock %}

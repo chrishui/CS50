@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Sell
+{% endblock %}
+
+{% block main %}
+    <h1> Stock sell </h1>
+    <br><br>
+    <form action="/sell" method="post">
+
+        <!-- user to select symbol -->
+        <select name="tosell">
+            <!--Iterate over symbols, from /sell GET section-->
+            {% for row in symbol_db %}
+                <option value= {{ row['symbol'] }} > {{ row['symbol'] }} </option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <!-- user input number of shares -->
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="No. of shares" type="text">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+
+    </form>
+{% endblock %}

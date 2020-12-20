@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Quoted
+{% endblock %}
+
+{% block main %}
+    <h1>Symbol data</h1>
+    <div>
+        Symbol: {{ symbol }}
+    </div>
+    <div>
+        Instrument name: {{ name }}
+    </div>
+    <div>
+        Price (USD$): {{ price }}
+    </div>
+    <!--
+    <div>
+        Sector: {{ sector }}
+    </div>
+    <div>
+        Industry: {{ industry }}
+    </div>
+    <div>
+        Website: {{ website }}
+    </div>
+    <div>
+        description: {{ description }}
+    </div> -->
+
+    <a href="/quote"> Back to instrument selection </a>
+{% endblock %}

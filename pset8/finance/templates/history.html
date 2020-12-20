@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    History
+{% endblock %}
+
+{% block main %}
+    <h1>Trade history</h1>
+    <table>
+        <tr>
+            <th> Direction </th>
+            <th> Symbol </th>
+            <th> Quantity </th>
+            <th> Purchase price </th>
+            <th> Total amount </th>
+            <th> Trading day </th>
+            <th> Trading time </th>
+        </tr>
+        {% for row in rows %}
+            <tr>
+                <td> {{ row['direction'] }} </td>
+                <td> {{ row['symbol'] }} </td>
+                <td> {{ row['quantity'] }} </td>
+                <td> {{ row['price'] }} </td>
+                <td> {{ row['total_amount'] }} </td>
+                <td> {{ row['trading_day'] }} </td>
+                <td> {{ row['trading_time'] }} </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}
