@@ -13,7 +13,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required, lookup, lookup2, usd
 #import datetime
 from datetime import datetime
 
@@ -302,6 +302,9 @@ def quote():
         # Obtain symbol data via lookup helper function
         instrument = lookup(symbol)
 
+        # (20/12/20) Lookup2 for company tags
+        data = lookup2(symbol)
+
         # if no data returned
         if not instrument:
             return apology("Symbol doesn't exist",403)
@@ -312,13 +315,11 @@ def quote():
             name = instrument["name"]
             price = instrument["price"]
             symbol = instrument["symbol"]
-            #sector = instrument["sector"]
-            #industry = instrument["industry"]
-            #website = instrument["website"]
-            #description = instrument["description"]
+            # Added item below from lookup2
+            tags = data["tags"]
 
             # Otherwise, link name, symbol, and price to quoted.html
-            return render_template("quoted.html", name=name, price=price, symbol=symbol)
+            return render_template("quoted.html", name=name, price=price, symbol=symbol, tags=tags)
 
 #==========================================================================
 # 1: Register
