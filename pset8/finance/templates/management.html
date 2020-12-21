@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    management
+{% endblock %}
+
+{% block main %}
+    <form action="/management" method="post">
+
+        <h1> Change password </h1>
+
+        <!-- User current password input -->
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="cpassword" placeholder="Current password" type="text">
+        </div>
+
+        <!-- User new password input -->
+        <!--Enter new password-->
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="npassword" placeholder="New password" type="password">
+        </div>
+
+        <!--Password confirmation-->
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="npassword2" placeholder="Confirm password" type="password">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+
+    </form>
+
+{% endblock %}
