@@ -148,7 +148,7 @@ def buy():
         shares = int(request.form.get("shares"))
 
         # if no. of shares is not positive integer
-        if shares < 0:
+        if shares < 1:
             return apology("No. of shares must be positive",403)
 
         # Total cost of user's shares purchase
@@ -416,6 +416,10 @@ def sell():
         # Obtain user's chosen no. of shares to sell
         shares = int(request.form.get("shares"))
 
+        # (21/12/2020) Add condition, if user's input is not int / decimal / >1
+
+
+
         # Check if user owns chosen stock, and if no. of shares to sell exceeds shares owned
         symbol_check = 0
         for i in range(num):
@@ -479,6 +483,63 @@ def sell():
 
         return redirect("/")
 
+#==========================================================================
+# 7: Management
+#==========================================================================
+@app.route("/management", methods=["GET", "POST"])
+@login_required
+def management():
+    """User account management."""
+
+    # User reached route via GET
+    if request.method == "GET":
+        return render_template("management.html")
+
+    # User reached route via POST (submitted a form via POST)
+    if request.method == "POST":
+
+        # Obtain logged in user's user_id
+        user_id = session.get("user_id")
+
+        # Obtain user's current password
+        cpassword = request.form.get("cpassword")
+
+        # Obtain user's new password
+        npassword = request.form.get("npassword")
+
+        # Obtain user's new password confirmation
+        npassword2 = request.form.get("npassword2")
+
+        # If either input is blank
+        if not cpassword:
+            return apology("Please input current password",403)
+        if not npassword:
+            return apology("Please input new password",403)
+        if not npassword2:
+            return apology("Please input new password confirmation",403)
+
+        # If password doesn't match
+        if npassword != npassword2:
+            return apology("passwords do not match",403)
+
+        # Query database for password
+        query = db.execute("SELECT * FROM users WHERE id=:id", id=user_id)
+
+        # Check if hashed password is correct
+        if not check_password_hash(query[0]["hash"], request.form.get("cpassword")):
+            return apology("Current password incorrect", 403)
+
+        # Hash new password
+        newhash = generate_password_hash(npassword,method='pbkdf2:sha256',salt_length=8)
+
+        # To update password
+        db.execute("UPDATE users SET hash=:hash WHERE id=:id", hash=newhash, id=user_id)
+
+        return render_template("pwchanged.html")
+
+#==========================================================================
+# Preloaded: Error handler
+#==========================================================================
 def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
