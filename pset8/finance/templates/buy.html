@@ -15,11 +15,27 @@
         </div>
 
         <!-- user input number of shares -->
+        <!--(21/12/20) Added warning for invalid input. Reference: Bootstrap popover-->
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="No. of shares" type="text">
+            <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="No. of shares" type="text"
+            data-container="body" data-toggle="popover" title="Error!" data-placement="right" data-content="TBC.">
         </div>
 
         <button class="btn btn-primary" type="submit">Submit</button>
 
+        <!--Warning for invalid input-->
+        <!--Reference: Bootstrap popover -->
+        <!--https://getbootstrap.com/docs/4.0/components/popovers/-->
+        <!--<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" title="Error!" data-placement="right" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+          Popover on right
+        </button>-->
     </form>
+
+    <script>
+    /*Need to add code for TODO condition*/
+    /*JavaScript to enable toggler*/
+    $(function () {
+    $('[data-toggle="popover"]').popover()
+    })
+    </script>
 {% endblock %}
