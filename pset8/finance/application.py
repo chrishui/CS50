@@ -50,65 +50,95 @@ if not os.environ.get("API_KEY"):
 #==========================================================================
 # 4: Index
 #==========================================================================
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
     """Show portfolio of stocks"""
 
-    # Obtain logged in user's user_id
-    user_id = session.get("user_id")
-
-    # pull symbols, quantities and average prices from finance.db > portfolio
-    rows = db.execute("SELECT symbol, quantity, price, total_amount FROM portfolio WHERE id=:id", id=user_id)
-
-    # To obtain average purchase prices, from history table
-    avg_pur_price = db.execute("SELECT symbol, AVG(price) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
-
-    # No. of different shares bought by user
-    num = len(rows)
-
-    # stocks total value current
-    tot_stocks = 0
-
-    # Iterate over each stock
-    for i in range(num):
-        # select symbol
-        sbl = rows[i]['symbol']
-        # Lookup data using lookup()
-        current = lookup(sbl)
-        # Obtain current price
-        c_price = current["price"]
-        # Add current price, as dict, to rows
-        rows[i]['currentprice'] = c_price
-
-        # total current value
-        tot_v = c_price*(rows[i]["quantity"])
-        # Add total current value, as dict, to rows
-        rows[i]['totalcurrentprice'] = tot_v
-
-        # Add total value to stocks total value current
-        tot_stocks += tot_v
-
-        #18/12/20
-        #Check average purchase price
-        for j in range(len(avg_pur_price)):
-            if avg_pur_price[j]['symbol'] == sbl:
-                avg_pprice = avg_pur_price[j]['AVG(price)']
-                rows[i]['averagepurchaseprice'] = avg_pprice
-                break
-
-    # User remaining cash balance
-    cash = (db.execute("SELECT cash FROM users WHERE id=:id", id=user_id))[0]["cash"]
-
-    # Grand total (stocks' total current value plus cash)
-    gtot = cash + tot_stocks
-
-    #User reach route via GET
+    # User reach route via GET
     if request.method == "GET":
+
+        # Obtain logged in user's user_id
+        user_id = session.get("user_id")
+
+        # pull symbols, quantities and average prices from finance.db > portfolio
+        rows = db.execute("SELECT symbol, quantity, price, total_amount FROM portfolio WHERE id=:id", id=user_id)
+
+        # To obtain average purchase prices, from history table
+        avg_pur_price = db.execute("SELECT symbol, AVG(price) FROM history WHERE id=:id GROUP BY symbol", id=user_id)
+
+        # No. of different shares bought by user
+        num = len(rows)
+
+        # stocks total value current
+        tot_stocks = 0
+
+        # Iterate over each stock
+        for i in range(num):
+            # select symbol
+            sbl = rows[i]['symbol']
+            # Lookup data using lookup()
+            current = lookup(sbl)
+            # Obtain current price
+            c_price = current["price"]
+            # Add current price, as dict, to rows
+            rows[i]['currentprice'] = c_price
+
+            # total current value
+            tot_v = c_price*(rows[i]["quantity"])
+            # Add total current value, as dict, to rows
+            rows[i]['totalcurrentprice'] = tot_v
+
+            # Add total value to stocks total value current
+            tot_stocks += tot_v
+
+            #18/12/20
+            #Check average purchase price
+            for j in range(len(avg_pur_price)):
+                if avg_pur_price[j]['symbol'] == sbl:
+                    avg_pprice = avg_pur_price[j]['AVG(price)']
+                    rows[i]['averagepurchaseprice'] = avg_pprice
+                    break
+
+        # User remaining cash balance
+        cash = (db.execute("SELECT cash FROM users WHERE id=:id", id=user_id))[0]["cash"]
+
+        # Grand total (stocks' total current value plus cash)
+        gtot = cash + tot_stocks
+
         return render_template("index.html", rows=rows, cash=cash, gtot=gtot)
 
-    else:
-        return apology("Error",403)
+    # User reach route via POST
+    if request.method == "POST":
+        # Obtain logged in user's user_id
+        user_id = session.get("user_id")
+
+        #check if shares input is digit
+        if (request.form.get("cash")).isdigit()==False:
+            return apology("Please enter cash for add",403)
+
+        # Obtain amount of cash to add from user
+        addcash = int(request.form.get("cash"))
+
+        if not addcash:
+            return apology("Please enter cash for add",403)
+
+        # Check if shares input is positive
+        if addcash < 0:
+            return apology("Cash input must be positive",403)
+
+        # Obtain current remaining cash of user
+        balance = (db.execute("SELECT cash FROM users WHERE id=:id", id=user_id))[0]["cash"]
+
+        # new balance and insert into table
+        newbalance = addcash + balance
+
+        # Insert new balance into finance.db
+        db.execute("UPDATE users SET cash=:cash WHERE id=:id", cash=newbalance, id=user_id)
+
+        # Redirect user to index page
+        return redirect("/")
+
 
 #==========================================================================
 # 3: Buy
@@ -143,6 +173,10 @@ def buy():
         else:
             # Assign lookup dict for instrument price
             price = instrument["price"]
+
+        #check if shares input is digit
+        if (request.form.get("shares")).isdigit()==False:
+            return apology("Please enter integer for shares",403)
 
         # Obtain user's no. of shares input
         shares = int(request.form.get("shares"))
@@ -413,12 +447,16 @@ def sell():
 
         num = len(live)
 
+        #check if shares input is digit
+        if (request.form.get("shares")).isdigit()==False:
+            return apology("Please enter integer for shares",403)
+
         # Obtain user's chosen no. of shares to sell
         shares = int(request.form.get("shares"))
 
         # (21/12/2020) Add condition, if user's input is not int / decimal / >1
-
-
+        if shares < 1:
+            return apology("Invalid shares input",403)
 
         # Check if user owns chosen stock, and if no. of shares to sell exceeds shares owned
         symbol_check = 0
