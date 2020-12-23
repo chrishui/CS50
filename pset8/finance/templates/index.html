@@ -6,7 +6,11 @@
 
 {% block main %}
     <h1>Portfolio</h1>
+
+    <!--Table for portfolio-->
     <table class="table">
+
+        <!--Header-->
         <thead class="thead-light">
             <tr>
                 <th> Symbol </th>
@@ -17,22 +21,60 @@
                 <th> Total current price </th>
             </tr>
         </thead>
-        {% for row in rows %}
-            <tr>
-                <td> {{ row['symbol'] }} </td>
-                <td> {{ row['quantity'] }} </td>
-                <td> {{ row['averagepurchaseprice'] }} </td>
-                <td> {{ row['total_amount'] }} </td>
-                <td> {{ row['currentprice'] }} </td>
-                <td> {{ row['totalcurrentprice'] }} </td>
-            </tr>
-        {% endfor %}
+
+        <!--Body-->
+        <!--2 decimal places added for index below, note: '0.2f'|format()-->
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td> {{ row['symbol'] }} </td>
+                    <td> {{ row['quantity'] }} </td>
+                    <td> ${{ '%0.2f'|format(row['averagepurchaseprice']) }} </td>
+                    <td> ${{ '%0.2f'|format(row['total_amount']) }} </td>
+                    <td> ${{ '%0.2f'|format(row['currentprice']) }} </td>
+                    <td> ${{ '%0.2f'|format(row['totalcurrentprice']) }} </td>
+                </tr>
+            {% endfor %}
+        </tbody>
     </table>
 
     <br><br>
 
-    <p> Available cash (USD$): {{ cash }} </p>
+    <h1>Summary</h1>
 
-    <p> Grand total (cash + current stocks' value) (USD$): {{ gtot }} </p>
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th> Available cash, USD$ </th>
+                <th> Grand total (cash + current portfolio value), USD$ </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td> ${{ '%0.2f'|format(cash) }} </td>
+                <td> ${{ '%0.2f'|format(gtot) }} </td>
+            </tr>
+        </tbody>
+
+    </table>
+
+    <br>
+    <!--Add cash-->
+
+    <h3>Add cash</h3>
+
+    <form action="/" method="post">
+
+        <!-- user symbol input -->
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="cash" placeholder="Add cash" type="text">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Submit</button>
+
+    </form>
+
+
 
 {% endblock %}
