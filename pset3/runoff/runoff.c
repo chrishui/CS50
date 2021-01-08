@@ -42,7 +42,7 @@ int main(int argc, string argv[])
         return 1;
     }
 
-    // Populate array of candidates
+    // Populate array of candidates.
     candidate_count = argc - 1;
     if (candidate_count > MAX_CANDIDATES)
     {
@@ -83,7 +83,7 @@ int main(int argc, string argv[])
         printf("\n");
     }
 
-    // Keep holding runoffs until winner exists
+    // Keep holding runoffs until winner exists.
     while (true)
     {
         // Calculate votes given remaining candidates
