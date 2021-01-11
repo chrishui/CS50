@@ -1,8 +1,8 @@
-# CS50 Introduction to Computer Science
+## CS50 Introduction to Computer Science
 This repository contains my solutions to Havard University’s <a href='https://www.edx.org/course/cs50s-introduction-to-computer-science'>CS50 course (2020)</a>.<br>
 Hope that my solved solutions will be helpful to other students. Specifications for each problem set is linked in the table of contents below.
 
-# Table of contents
+## Table of contents
 - [Problem Set 1: C](/pset1) - <a href='https://cs50.harvard.edu/x/2020/psets/1/'> Assignments 1</a>
 * [cash](/pset1/cash)
 * [hello](/pset1/hello)
@@ -31,10 +31,10 @@ Hope that my solved solutions will be helpful to other students. Specifications 
 - [Problem Set 8: Web](/pset8) - <a href='https://cs50.harvard.edu/x/2020/tracks/'> Assignments 8</a>
 * [finance](/pset8/finance)
 
-# Course certificate
-[Final Certificate](CS50x%certificate%PNG.png)
+## Course certificate
+![Final Certificate](CS50x%certificate%PNG.png)
 
-# Disclaimer
+## Disclaimer
 Please adhere to the course's <a href='https://docs.cs50.net/2016/fall/syllabus/cs50.html#academic-honest'>academic honesty</a> policy. 
  
 
